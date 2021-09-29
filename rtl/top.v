@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //This is the top module for a hierarchical flash-SRAM storage mechanism. 
-//Its front module is CPU, connecting directly to a separated flash chip 
+//Its front module is CPU, connecting directly to a serial flash chip 
 //through SPI protocol. 
 //The rear module is AHB, connecting back to the CPU. 
 //////////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ module top(
     .wdata(flash_sram_so), 
     
     .ram_rdata(sram_rams_rdata), 
-    .ram_we(sram_rams_we), 
+    .ram_sel(sram_rams_sel), 
     .ram_raddr(sram_rams_raddr), 
     .ram_wdata(sram_rams_wdata) 
   ); 
