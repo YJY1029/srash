@@ -1,9 +1,10 @@
-//////////////////////////////////////////////////////////////////////////
-//This is the top module for a hierarchical flash-SRAM storage mechanism. 
-//Its front module is CPU, connecting directly to a serial flash chip 
-//through SPI protocol. 
+///////////////////////////////////////////////////////////////////
+//This is the top module for a hierarchical flash-SRAM storage 
+//mechanism. 
+//Its front module is CPU, connecting directly to a serial 
+//flash chip through SPI protocol. 
 //The rear module is AHB, connecting back to the CPU. 
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
 `include "defines.v"
 
@@ -15,9 +16,10 @@ module top(
   input cpu_flash_si, 
   
   //AHB outputs to be added
+  output rmiss
   );
 
-  flash flash(     
+  flash flash( 
     .cs(cpu_flash_cs), 
     .sck(cpu_flash_sck), 
     .si(cpu_flash_si), 

@@ -1,15 +1,15 @@
-//////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 //Controller of main SRAM and sub-SRAMs. 
-//1. Initializes main SRAM
+//1. Initializes main SRAM. 
 //2. Decides which SRAM to read or write. 
 //
 //TBD: 
 //0. Pipeline design of the mechanism. 
 //1. Detailed read and write method process. 
-//2. <= and = problem in while statement. 
-//3. handshake instead of a single write always module? 
-//4. grst usage. 
-//////////////////////////////////////////////////////////////////////////
+//1.5. Handshake instead of a single write always module? 
+//2. Clock bit and clock hand bit. 
+//3. grst usage. 
+///////////////////////////////////////////////////////////////////
 
 `include "defines.v"
 
@@ -17,11 +17,20 @@ module sram_ctrl(
   input clk, 
   input grst, 
   
-  //CPU in
+  //CPU 
   input re, 
   input [`ADDR_WIDTH] raddr, 
   
-  output rmiss
+  output rmiss, 
+  //outputs reads, 
+
+  //flash 
+  input [`DATA_WIDTH-1:0] wdata, 
+  input [`ADDR_WIDTH-1:0] waddr//,
+
+  //RAMs
+  //inputs reads, 
+  //outputs writes 
   ); 
   
   reg [`LOG_SUB_NUM-1:0] ptr_rd; 
@@ -29,16 +38,16 @@ module sram_ctrl(
   
   reg [`ADDR_WIDTH-1:0] sub_addr [`SUB_NUM-1:0]; 
   
-  reg ref_bit [`SUB_NUM-1:0]; 
+  reg clock_bit [`SUB_NUM-1:0]; 
   
   //resetting all
   initial begin 
-  	ptr_rd = `SUB0_IDX; 
-  	ptr_rd_next = `SUB1_IDX; 
+  	ptr_rd <= `SUB0_IDX; 
+  	ptr_rd_next <= ptr_rd+1; 
   	
   	for (i = 0; i < 4; i = i+1) begin 
   		sub_addr[i] <= 32'h0; 
-  		ref_bit[i] <= 0; 
+  		clock_bit[i] <= 0; 
   	end 
   	
   end 
@@ -52,10 +61,9 @@ module sram_ctrl(
   		 
   	end else begin 
 
-      ptr_rd_next <= (ptr_rd != 2'b11) ? (ptr_rd+1):2'b00; 
   		for (i = 0; i < 4; i = i+1) begin 
   			if (sub_addr[i] < raddr) && (raddr < sub_addr[i]+`SUB_DEPTH) begin 
-          ref_bit[i] <= 1; 
+          clock_bit[i] <= 1; 
   				rmiss <= 0; 
   				
   				//read from sub i
@@ -82,17 +90,18 @@ module sram_ctrl(
   always@(posedge clk) begin 
   	if (`MAIN_LOWER < waddr) && (waddr < `MAIN_UPPER) begin 
 
-      //update at waddr 
+      //write main at waddr 
 
     end else begin 
-      while (ref_bit[ptr_wr] != 0) begin 
-        ref_bit[ptr_wr] = 0; 
-        ptr_wr = ptr_wr_next; 
-        ptr_wr_next = (ptr_wr ! 2'b11) ? (ptr_wr+1):2'b00; 
+      while (clock_bit[ptr_wr] != 0) begin 
+        clock_bit[ptr_wr] <= 0; 
+        ptr_wr <= ptr_wr_next; 
+        ptr_wr_next <= (ptr_wr ! 2'b11) ? (ptr_wr+1):2'b00; 
       end 
       
-      //read from Flash to sub SRAM 
-
+      //write to sub i
+      
+      sub_addr[ptr_wr] <= waddr; 
     end 
   end 
 
