@@ -69,7 +69,7 @@ module sram_ctrl(
   				//read from sub i
   				
   			end else begin 
-  				rmiss <= 1; 
+  				rmiss <= 1; //!!!wrong, haven't quitted the loop!!!
   			end 
   		end 
   		
