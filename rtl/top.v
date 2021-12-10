@@ -37,20 +37,33 @@ module top(
     .rdata(sram_ahb_rdata), 
     
     .wdata(flash_sram_so), 
-    
+
     .ram_rdata(sram_rams_rdata), 
     .ram_sel(sram_rams_sel), 
     .ram_raddr(sram_rams_raddr), 
     .ram_wdata(sram_rams_wdata) 
   ); 
   
-  fake_ahb ahb( 
-    .clk(clk), 
-    .rst(grst), 
-    
-    .rdata(sram_ahb_rdata), 
-    .re(ahb_srm_re), 
-    .raddr(ahb_sram_raddr)//no w-related I guess
+  fake_ahb cmsdk_ahb_to_flash32 #(
+    // Parameters
+    parameter AW       = 16,// Address width
+    parameter WS       = 1) // Flash access wait state (0 to 3)
+    (
+      input  wire          HCLK,    // Clockinput  wire          HRESETn, // Reset
+      input  wire          HSEL,    // Device select
+      input  wire [AW-1:0] HADDR,   // Address
+      input  wire    [1:0] HTRANS,  // Transfer control
+      input  wire    [2:0] HSIZE,   // Transfer size
+      input  wire    [3:0] HPROT,   // Protection
+      input  wire          HWRITE,  // Write control
+      input  wire   [31:0] HWDATA,  // Write data - not used
+      input  wire          HREADY,  // Transfer phase done
+      output wire          HREADYOUT, // Device ready
+      output wire   [31:0] HRDATA,  // Read data output
+      output wire          HRESP,   // Device response (always OKAY)
+      output wire [AW-3:0] FLASHADDR, // Flash address
+      input  wire   [31:0] FLASHRDATA  // Flash read data
+);
   ); 
   
   mainsram main #(`MAIN_DEPTH) ( 

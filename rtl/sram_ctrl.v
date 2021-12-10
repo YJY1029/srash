@@ -4,11 +4,10 @@
 //2. Decides which SRAM to read or write. 
 //
 //TBD: 
-//0. Pipeline design of the mechanism. 
-//1. Detailed read and write method process. 
-//1.5. Handshake instead of a single write always module? 
-//2. Clock bit and clock hand bit. 
-//3. grst usage. 
+//0.begin reading from last pointer
+//1.AHB compatible
+//2.initialization mechanism
+//3.pipeline mechanism
 ///////////////////////////////////////////////////////////////////
 
 `include "defines.v"
@@ -17,12 +16,14 @@ module sram_ctrl(
   input clk, 
   input grst, 
   
-  //CPU 
+  //AHB
+  //set of AHB inputs 
   input re, 
   input [`ADDR_WIDTH] raddr, 
   
   output rmiss, 
   //outputs reads, 
+  //set of AHB outputs
 
   //flash 
   input [`DATA_WIDTH-1:0] wdata, 
@@ -37,8 +38,10 @@ module sram_ctrl(
   reg [`LOG_SUB_NUM-1:0] ptr_rd_next; 
   
   reg [`ADDR_WIDTH-1:0] sub_addr [`SUB_NUM-1:0]; 
-  
   reg clock_bit [`SUB_NUM-1:0]; 
+  reg sub_miss[`SUB_NUM-1:0]; 
+
+  assign rmiss = (sub_miss == 0); //internal AND?
   
   //resetting all
   initial begin 
@@ -61,15 +64,15 @@ module sram_ctrl(
   		 
   	end else begin 
 
-  		for (i = 0; i < 4; i = i+1) begin 
+  		for (i = 0; i < 4; i = i+1) begin //change it to pointer
   			if (sub_addr[i] < raddr) && (raddr < sub_addr[i]+`SUB_DEPTH) begin 
           clock_bit[i] <= 1; 
-  				rmiss <= 0; 
+  				sub_rmiss[i] <= 0; 
   				
   				//read from sub i
   				
   			end else begin 
-  				rmiss <= 1; //!!!wrong, haven't quitted the loop!!!
+  				sub_rmiss[i] <= 1; 
   			end 
   		end 
   		
